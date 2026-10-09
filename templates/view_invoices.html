@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Invoice Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+    <div class="container-fluid px-4 mt-4">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold text-primary mb-1">Purchase Invoices & Tax Ledger</h2>
+                <p class="text-muted mb-0">Track essential business purchase details and GST liability</p>
+            </div>
+            <a href="/" class="btn btn-primary btn-lg shadow-sm">+ Upload New Bills</a>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card bg-white border-0 shadow-sm p-3 border-start border-primary border-4">
+                    <span class="text-muted fs-7">Total Bills Logged</span>
+                    <h3 class="fw-bold mt-1 mb-0">{{ invoices|length }}</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-white border-0 shadow-sm p-3 border-start border-warning border-4">
+                    <span class="text-muted fs-7">Total Input Tax Credit (ITC)</span>
+                    <h3 class="fw-bold text-warning mt-1 mb-0">₹{{ "%.2f"|format(total_tax) }}</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-white border-0 shadow-sm p-3 border-start border-success border-4">
+                    <span class="text-muted fs-7">Total Purchase Amount</span>
+                    <h3 class="fw-bold text-success mt-1 mb-0">₹{{ "%.2f"|format(total_purchase) }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comprehensive Business Data Table -->
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>Date</th>
+                                <th>Invoice No</th>
+                                <th>Supplier Name</th>
+                                <th>Supplier GSTIN</th>
+                                <th>Taxable Value</th>
+                                <th>GST Tax</th>
+                                <th>Grand Total</th>
+                                <th>Transport</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if invoices %}
+                                {% for inv in invoices %}
+                                <tr>
+                                    <td><strong>{{ inv[0] }}</strong></td>
+                                    <td>{{ inv[2] }}</td>
+                                    <td><span class="badge bg-secondary">{{ inv[1] }}</span></td>
+                                    <td><strong>{{ inv[3] }}</strong></td>
+                                    <td><code>{{ inv[4] }}</code></td>
+                                    <td>₹{{ "%.2f"|format(inv[5]) }}</td>
+                                    <td><span class="text-danger fw-semibold">+₹{{ "%.2f"|format(inv[6]) }}</span></td>
+                                    <td><strong class="text-success fs-6">₹{{ "%.2f"|format(inv[7]) }}</strong></td>
+                                    <td><small class="text-muted">{{ inv[8] }}</small></td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <!-- View Image File Button -->
+                                            <a href="/uploads/{{ inv[9] }}" target="_blank" class="btn btn-outline-info btn-sm">View File</a>
+                                            
+                                            <!-- Edit Record Button -->
+                                            <a href="/edit/{{ inv[0] }}" class="btn btn-outline-warning btn-sm">Edit</a>
+                                            
+                                            <!-- Delete Record Button -->
+                                            <form action="/delete/{{ inv[0] }}" method="POST" onsubmit="return confirm('Delete this record permanently?');">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="10" class="text-center text-muted py-5">
+                                        No invoice records found. Click "+ Upload New Bills" to get started.
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

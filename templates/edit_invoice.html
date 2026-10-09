@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Invoice Details</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+    <div class="container mt-5" style="max-width: 700px;">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white py-3">
+                <h4 class="mb-0 fw-bold">Edit Invoice Record #{{ invoice[0] }}</h4>
+            </div>
+            <div class="card-body p-4">
+                <form action="/edit/{{ invoice[0] }}" method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Invoice Date</label>
+                            <input type="text" name="invoice_date" class="form-control" value="{{ invoice[2] }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Invoice No</label>
+                            <input type="text" name="invoice_no" class="form-control" value="{{ invoice[1] }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Supplier Name</label>
+                            <input type="text" name="supplier_name" class="form-control" value="{{ invoice[3] }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Supplier GSTIN</label>
+                            <input type="text" name="supplier_gstin" class="form-control" value="{{ invoice[4] }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Taxable Amount (₹)</label>
+                            <input type="number" step="0.01" name="taxable_amt" class="form-control" value="{{ invoice[5] }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">GST Tax (₹)</label>
+                            <input type="number" step="0.01" name="tax_amt" class="form-control" value="{{ invoice[6] }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Grand Total (₹)</label>
+                            <input type="number" step="0.01" name="grand_total" class="form-control" value="{{ invoice[7] }}" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Transport Name</label>
+                            <input type="text" name="transport_name" class="form-control" value="{{ invoice[8] }}" required>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="/invoices" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-success px-4">Update Record</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
