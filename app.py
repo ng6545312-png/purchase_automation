@@ -11,7 +11,6 @@ from flask import (
     send_from_directory,
     url_for,
 )
-from PIL import Image
 
 warnings.filterwarnings('ignore')
 
@@ -46,7 +45,7 @@ def init_db():
 init_db()
 
 
-# Smart Pattern Matcher (Handles any filename from Mobile/PC)
+# Smart Extraction Engine for Surat Bills
 def extract_bill_details(filepath, filename):
   upper_filename = filename.upper()
 
@@ -60,7 +59,6 @@ def extract_bill_details(filepath, filename):
   grand_total = 0.00
   transport_name = 'Self / Direct'
 
-  # File Size based identification for camera uploads
   file_size = os.path.getsize(filepath) if os.path.exists(filepath) else 0
 
   # 1. HEIRLOOMS DESIGNER
@@ -159,25 +157,34 @@ def index():
               trans,
           ) = extract_bill_details(filepath, filename)
 
-          # Insert record without duplicate rejection during initial batch tests
+          # STRICT UNIQUE FILTER: Duplicate Entry Validation
           cursor.execute(
-              """
-                        INSERT INTO invoices 
-                        (invoice_no, invoice_date, supplier_name, supplier_gstin, taxable_amt, tax_amt, grand_total, transport_name, image_path)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-              (
-                  inv_no,
-                  inv_date,
-                  supp_name,
-                  supp_gst,
-                  tax_val,
-                  tax_amt,
-                  total,
-                  trans,
-                  filename,
-              ),
+              'SELECT id FROM invoices WHERE invoice_no = ? AND supplier_name'
+              ' = ?',
+              (inv_no, supp_name),
           )
+          exists = cursor.fetchone()
+
+          # Unique Entry Hone Par Hi Accept Hoga
+          if not exists:
+            cursor.execute(
+                """
+                            INSERT INTO invoices 
+                            (invoice_no, invoice_date, supplier_name, supplier_gstin, taxable_amt, tax_amt, grand_total, transport_name, image_path)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
+                (
+                    inv_no,
+                    inv_date,
+                    supp_name,
+                    supp_gst,
+                    tax_val,
+                    tax_amt,
+                    total,
+                    trans,
+                    filename,
+                ),
+            )
 
       conn.commit()
       conn.close()
