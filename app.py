@@ -11,8 +11,6 @@ from flask import (
     send_from_directory,
     url_for,
 )
-from PIL import Image
-import pytesseract
 
 warnings.filterwarnings('ignore')
 
@@ -47,10 +45,14 @@ init_db()
 
 
 def extract_bill_details(filepath):
-  img = Image.open(filepath)
-  raw_text = pytesseract.image_to_string(img)
+  # Lazy import EasyOCR inside execution to prevent memory overhead during server startup
+  import easyocr
+
+  reader = easyocr.Reader(['en'], gpu=False)
+
+  ocr_results = reader.readtext(filepath, detail=0)
+  raw_text = ' '.join(ocr_results)
   upper_raw = raw_text.upper()
-  ocr_results = raw_text.splitlines()
 
   # Defaults
   invoice_no = 'INV-AUTO'
@@ -116,8 +118,8 @@ def extract_bill_details(filepath):
         'SYSTEM',
         'PAGE',
     ]
-    for line in ocr_results:
-      clean_item = line.strip()
+    for text in ocr_results[:10]:
+      clean_item = text.strip()
       if len(clean_item) > 3 and not any(
           kw in clean_item.upper() for kw in ignore_headers
       ):
