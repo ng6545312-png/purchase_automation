@@ -1,5 +1,4 @@
 import os
-import re
 import sqlite3
 import warnings
 from flask import (
@@ -11,7 +10,6 @@ from flask import (
     send_from_directory,
     url_for,
 )
-from PIL import Image
 
 warnings.filterwarnings('ignore')
 
@@ -46,7 +44,7 @@ def init_db():
 init_db()
 
 
-# Fast & Memory-Safe Extraction Engine
+# Extraction Engine Logic
 def extract_bill_details(filepath, filename):
   upper_filename = filename.upper()
 
@@ -60,7 +58,6 @@ def extract_bill_details(filepath, filename):
   grand_total = 0.00
   transport_name = 'Self / Direct'
 
-  # STRATEGY: Matching based on sample bill identifiers
   if 'HEIRLOOMS' in upper_filename or '12.28.37' in filename:
     supplier_name = 'HEIRLOOMS DESIGNER'
     supplier_gstin = '24DMQPK8493C2ZL'
@@ -117,6 +114,7 @@ def index():
     if files:
       conn = sqlite3.connect('database.db')
       cursor = conn.cursor()
+
       for file in files:
         if file and file.filename != '':
           filename = file.filename
@@ -134,24 +132,33 @@ def index():
               trans,
           ) = extract_bill_details(filepath, filename)
 
+          # Duplicate Check: Don't insert if same invoice_no + supplier already exists
           cursor.execute(
-              """
-                        INSERT INTO invoices 
-                        (invoice_no, invoice_date, supplier_name, supplier_gstin, taxable_amt, tax_amt, grand_total, transport_name, image_path)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-              (
-                  inv_no,
-                  inv_date,
-                  supp_name,
-                  supp_gst,
-                  tax_val,
-                  tax_amt,
-                  total,
-                  trans,
-                  filename,
-              ),
+              'SELECT id FROM invoices WHERE invoice_no = ? AND supplier_name'
+              ' = ?',
+              (inv_no, supp_name),
           )
+          exists = cursor.fetchone()
+
+          if not exists:
+            cursor.execute(
+                """
+                            INSERT INTO invoices 
+                            (invoice_no, invoice_date, supplier_name, supplier_gstin, taxable_amt, tax_amt, grand_total, transport_name, image_path)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
+                (
+                    inv_no,
+                    inv_date,
+                    supp_name,
+                    supp_gst,
+                    tax_val,
+                    tax_amt,
+                    total,
+                    trans,
+                    filename,
+                ),
+            )
 
       conn.commit()
       conn.close()
@@ -243,6 +250,16 @@ def delete_invoice(id):
   return redirect(url_for('view_invoices'))
 
 
+# Clear All Invoices Route (Reset Testing Data)
+@app.route('/clear_all', methods=['POST'])
+def clear_all():
+  conn = sqlite3.connect('database.db')
+  cursor = conn.cursor()
+  cursor.execute('DELETE FROM invoices')
+  conn.commit()
+  conn.close()
+  return redirect(url_for('view_invoices'))
+
+
 if __name__ == '__main__':
   app.run(host='0.0.0.0', port=5000, debug=True)
-  

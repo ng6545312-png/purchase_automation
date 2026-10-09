@@ -14,7 +14,12 @@
                 <h2 class="fw-bold text-primary mb-1">Purchase Invoices & Tax Ledger</h2>
                 <p class="text-muted mb-0">Track essential business purchase details and GST liability</p>
             </div>
-            <a href="/" class="btn btn-primary btn-lg shadow-sm">+ Upload New Bills</a>
+            <div class="d-flex gap-2">
+                <form action="/clear_all" method="POST" onsubmit="return confirm('Clear all logged invoices?');">
+                    <button type="submit" class="btn btn-outline-danger btn-lg">Clear All</button>
+                </form>
+                <a href="/" class="btn btn-primary btn-lg shadow-sm">+ Upload New Bills</a>
+            </div>
         </div>
 
         <!-- Summary Cards -->
@@ -39,7 +44,7 @@
             </div>
         </div>
 
-        <!-- Comprehensive Business Data Table -->
+        <!-- Table -->
         <div class="card shadow-sm border-0">
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -73,14 +78,9 @@
                                     <td><small class="text-muted">{{ inv[8] }}</small></td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-1">
-                                            <!-- View Image File Button -->
                                             <a href="/uploads/{{ inv[9] }}" target="_blank" class="btn btn-outline-info btn-sm">View File</a>
-                                            
-                                            <!-- Edit Record Button -->
                                             <a href="/edit/{{ inv[0] }}" class="btn btn-outline-warning btn-sm">Edit</a>
-                                            
-                                            <!-- Delete Record Button -->
-                                            <form action="/delete/{{ inv[0] }}" method="POST" onsubmit="return confirm('Delete this record permanently?');">
+                                            <form action="/delete/{{ inv[0] }}" method="POST" onsubmit="return confirm('Delete this record?');">
                                                 <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
                                             </form>
                                         </div>
