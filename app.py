@@ -15,11 +15,12 @@ from flask import (
 warnings.filterwarnings('ignore')
 
 app = Flask(__name__)
-app.secret_key = 'super_secret_key_for_flash'
+app.secret_key = 'super_secret_key_for_purchase_automation'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 
+# Database Initialization
 def init_db():
   conn = sqlite3.connect('database.db')
   cursor = conn.cursor()
@@ -44,17 +45,18 @@ def init_db():
 init_db()
 
 
+# OCR & Data Extraction Function
 def extract_bill_details(filepath):
-  # Lazy import EasyOCR inside execution to prevent memory overhead during server startup
+  # Lazy import with Quantization to prevent Render Free Tier Memory Overflows
   import easyocr
 
-  reader = easyocr.Reader(['en'], gpu=False)
+  reader = easyocr.Reader(['en'], gpu=False, quantize=True)
 
   ocr_results = reader.readtext(filepath, detail=0)
   raw_text = ' '.join(ocr_results)
   upper_raw = raw_text.upper()
 
-  # Defaults
+  # Default values
   invoice_no = 'INV-AUTO'
   invoice_date = 'N/A'
   supplier_name = 'Unknown Supplier'
@@ -64,7 +66,7 @@ def extract_bill_details(filepath):
   grand_total = 0.00
   transport_name = 'Self / Direct'
 
-  # STRATEGY 1: KNOWN SUPPLIERS (Strict Matching)
+  # STRATEGY 1: KNOWN SUPPLIERS (Strict Pattern Matching)
   if 'HEIRLOOMS' in upper_raw:
     supplier_name = 'HEIRLOOMS DESIGNER'
     supplier_gstin = '24DMQPK8493C2ZL'
@@ -105,7 +107,7 @@ def extract_bill_details(filepath):
     invoice_date = dt_m.group(0) if dt_m else '13/01/2026'
     taxable_amt, tax_amt, grand_total = 95270.00, 4763.50, 100034.00
 
-  # STRATEGY 2: DYNAMIC SMART PARSER
+  # STRATEGY 2: DYNAMIC SMART REGEX FALLBACK PARSER
   else:
     ignore_headers = [
         'SHREE',
@@ -215,11 +217,13 @@ def extract_bill_details(filepath):
   )
 
 
+# Route: View Original Uploaded Image File
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
   return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
+# Route: File Upload Landing Page
 @app.route('/', methods=['GET', 'POST'])
 def index():
   if request.method == 'POST':
@@ -270,6 +274,7 @@ def index():
   return render_template('index.html')
 
 
+# Route: Invoices Dashboard
 @app.route('/invoices')
 def view_invoices():
   conn = sqlite3.connect('database.db')
@@ -289,6 +294,7 @@ def view_invoices():
   )
 
 
+# Route: Edit Logged Invoice Record
 @app.route('/edit/<int:id>', methods=['GET', 'POST'])
 def edit_invoice(id):
   conn = sqlite3.connect('database.db')
@@ -333,6 +339,7 @@ def edit_invoice(id):
   return render_template('edit_invoice.html', invoice=invoice)
 
 
+# Route: Delete Invoice Record
 @app.route('/delete/<int:id>', methods=['POST'])
 def delete_invoice(id):
   conn = sqlite3.connect('database.db')
